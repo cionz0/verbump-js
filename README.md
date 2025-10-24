@@ -1,6 +1,6 @@
 # @cionz0/verbump-js
 
-[![Version](https://img.shields.io/badge/version-1.2.2-blue.svg?style=flat-square)](https://github.com/cionz0/verbump-js)
+[![Version](https://img.shields.io/badge/version-1.2.3-blue.svg?style=flat-square)](https://github.com/cionz0/verbump-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg?style=flat-square)](https://nodejs.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-yellow.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
@@ -182,7 +182,7 @@ The tool automatically categorizes commits:
 
 ### 📄 Example Output
 ```markdown
-## 1.2.2 - 2023-12-25
+## 1.2.3 - 2023-12-25
 
 ### ✨ Features
 - Add user authentication
@@ -228,17 +228,17 @@ The tool automatically updates version references across your project files:
 ### 📝 Supported Patterns
 ```javascript
 // Badge patterns
-[![Version](https://img.shields.io/badge/version-1.2.2-blue.svg)]
+[![Version](https://img.shields.io/badge/version-1.2.3-blue.svg)]
 
 // JSON patterns
-"version": "1.2.2"
-'version': '1.2.2'
+"version": "1.2.3"
+'version': '1.2.3'
 
 // Header patterns
-## 1.2.2 - 2024-01-01
+## 1.2.3 - 2024-01-01
 
 // Comment patterns
-version: 1.2.2
+version: 1.2.3
 ```
 
 ### ⚙️ Custom Patterns

@@ -16,6 +16,11 @@ program
   .option("--dry-run", "Show what would be updated without making changes")
   .action(async (type, options) => {
     try {
+      // Check if this is the first run and offer to add scripts
+      if (type && ['patch', 'minor', 'major'].includes(type)) {
+        checkFirstRun();
+      }
+      
       if (type === 'changelog') {
         await updateChangelogOnly(options);
         console.log(chalk.green(`✅ Changelog updated`));

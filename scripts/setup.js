@@ -78,6 +78,49 @@ async function setupScripts() {
     const answer = await askQuestion('\n❓ Do you want to add these scripts? (y/N): ');
     
     if (answer === 'y' || answer === 'yes') {
+      // Ask for changelog configuration
+      console.log('\n📝 Changelog Configuration');
+      console.log('==========================');
+      console.log('\nWhere would you like the changelog file to be created?');
+      console.log('  📄 CHANGELOG.md (default)');
+      console.log('  📄 CHANGES.md');
+      console.log('  📄 HISTORY.md');
+      console.log('  📄 Custom path');
+      
+      const changelogChoice = await askQuestion('\n❓ Changelog file location (CHANGELOG.md): ');
+      
+      let changelogFile = 'CHANGELOG.md';
+      if (changelogChoice.trim()) {
+        if (changelogChoice.toLowerCase() === 'changes.md') {
+          changelogFile = 'CHANGES.md';
+        } else if (changelogChoice.toLowerCase() === 'history.md') {
+          changelogFile = 'HISTORY.md';
+        } else if (changelogChoice.toLowerCase() !== 'changelog.md') {
+          changelogFile = changelogChoice.trim();
+        }
+      }
+      
+      // Ask about changelog generation from commits
+      const generateFromCommits = await askQuestion('\n❓ Generate changelog from git commits automatically? (Y/n): ');
+      const generateCommits = generateFromCommits !== 'n' && generateFromCommits !== 'no';
+      
+      // Create configuration file
+      const config = {
+        changelogFile: changelogFile,
+        generateChangelogFromCommits: generateCommits,
+        updateVersionReferences: true,
+        versionUpdateFiles: [
+          'README.md',
+          'CHANGELOG.md',
+          '*.md',
+          'src/**/*.js',
+          'bin/**/*.js'
+        ]
+      };
+      
+      const configPath = path.join(process.cwd(), '.verbump-jsrc.json');
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+      
       // Add the scripts
       scriptsToAdd.forEach(script => {
         packageJson.scripts[script.name] = script.command;
@@ -86,6 +129,9 @@ async function setupScripts() {
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
       
       console.log(`\n✅ Successfully added ${scriptsToAdd.length} verbump-js scripts to your package.json!`);
+      console.log(`✅ Created configuration file: .verbump-jsrc.json`);
+      console.log(`✅ Changelog will be created at: ${changelogFile}`);
+      console.log(`✅ Generate from commits: ${generateCommits ? 'Yes' : 'No'}`);
       console.log('\n🚀 You can now use:');
       console.log('   npm run bump:patch');
       console.log('   npm run bump:minor');

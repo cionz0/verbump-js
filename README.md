@@ -1,9 +1,9 @@
 # @cionz0/verbump-js
 
-[![npm version](https://img.shields.io/npm/v/@cionz0/verbump-js.svg)](https://www.npmjs.com/package/@cionz0/verbump-js)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/@cionz0/verbump-js.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg?style=flat-square)](https://nodejs.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-yellow.svg?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![CLI](https://img.shields.io/badge/CLI-Tool-blue.svg?style=flat-square)](https://en.wikipedia.org/wiki/Command-line_interface)
 
 > 🚀 **Lightweight version bump CLI for Node.js projects** with smart changelog generation and commit-amend workflow.
 

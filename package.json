@@ -23,7 +23,6 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "prepare": "node scripts/setup.js",
     "postinstall": "node scripts/setup.js",
     "setup": "node scripts/setup.js",
     "bump:patch": "verbump-js patch --generate-changelog",

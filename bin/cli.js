@@ -1,8 +1,33 @@
 #!/usr/bin/env node
 import { program } from "commander";
 import chalk from "chalk";
+import fs from "fs";
+import path from "path";
 import { bumpVersion, updateChangelogOnly } from "../src/bump.js";
 import { setupScripts } from "../scripts/setup.js";
+
+// Check if verbump-js scripts exist in package.json
+function checkForScripts() {
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  
+  if (!fs.existsSync(packageJsonPath)) {
+    return false;
+  }
+
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    const scripts = packageJson.scripts || {};
+    
+    // Check if any verbump-js scripts exist
+    const verbumpScripts = Object.keys(scripts).filter(script => 
+      script.startsWith('bump:') || script === 'changelog'
+    );
+    
+    return verbumpScripts.length > 0;
+  } catch (error) {
+    return false;
+  }
+}
 
 program
   .name("verbump-js")
@@ -16,9 +41,11 @@ program
   .option("--dry-run", "Show what would be updated without making changes")
   .action(async (type, options) => {
     try {
-      // Check if this is the first run and offer to add scripts
-      if (type && ['patch', 'minor', 'major'].includes(type)) {
-        checkFirstRun();
+      // Show helpful message if no verbump-js scripts exist
+      if (type && ['patch', 'minor', 'major'].includes(type) && !checkForScripts()) {
+        console.log(chalk.blue('\n💡 Tip: Add helpful scripts to your package.json!'));
+        console.log(chalk.gray('Run: npx verbump-js setup'));
+        console.log('');
       }
       
       if (type === 'changelog') {

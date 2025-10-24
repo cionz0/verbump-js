@@ -26,11 +26,13 @@ A modern, fast, and feature-rich CLI tool for managing semantic versioning in No
 ### NPM
 ```bash
 npm install -D @cionz0/verbump-js
+npx verbump-js setup  # Add helpful scripts to package.json
 ```
 
 ### GitHub
 ```bash
 npm install -D git+https://github.com/cionz0/verbump-js.git
+npx verbump-js setup  # Add helpful scripts to package.json
 ```
 
 ### Global Installation

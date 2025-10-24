@@ -11,6 +11,15 @@ vi.mock('../src/git.js', () => ({
   gitCommitAndTag: vi.fn(),
   gitPush: vi.fn()
 }))
+vi.mock('../src/version-updater.js', () => ({
+  updateVersionInFiles: vi.fn().mockReturnValue({
+    updated: [],
+    skipped: [],
+    errors: [],
+    totalChanges: 0
+  }),
+  updatePackageJsonVersion: vi.fn().mockReturnValue(true)
+}))
 
 describe('bumpVersion', () => {
   const mockPackageJson = {
@@ -32,33 +41,30 @@ describe('bumpVersion', () => {
   })
 
   it('should bump patch version correctly', async () => {
+    const { updatePackageJsonVersion } = await import('../src/version-updater.js')
+    
     const result = await bumpVersion('patch')
     
     expect(result).toBe('1.0.1')
-    expect(fs.writeFileSync).toHaveBeenCalledWith(
-      './package.json',
-      expect.stringContaining('"version": "1.0.1"')
-    )
+    expect(updatePackageJsonVersion).toHaveBeenCalledWith('1.0.1', './package.json')
   })
 
   it('should bump minor version correctly', async () => {
+    const { updatePackageJsonVersion } = await import('../src/version-updater.js')
+    
     const result = await bumpVersion('minor')
     
     expect(result).toBe('1.1.0')
-    expect(fs.writeFileSync).toHaveBeenCalledWith(
-      './package.json',
-      expect.stringContaining('"version": "1.1.0"')
-    )
+    expect(updatePackageJsonVersion).toHaveBeenCalledWith('1.1.0', './package.json')
   })
 
   it('should bump major version correctly', async () => {
+    const { updatePackageJsonVersion } = await import('../src/version-updater.js')
+    
     const result = await bumpVersion('major')
     
     expect(result).toBe('2.0.0')
-    expect(fs.writeFileSync).toHaveBeenCalledWith(
-      './package.json',
-      expect.stringContaining('"version": "2.0.0"')
-    )
+    expect(updatePackageJsonVersion).toHaveBeenCalledWith('2.0.0', './package.json')
   })
 
   it('should throw error for invalid version type', async () => {
@@ -335,5 +341,135 @@ describe('bumpVersion', () => {
     
     expect(result).toBe('1.0.0')
     expect(updateChangelog).toHaveBeenCalledWith('1.0.0', 'HISTORY.md', { generateFromCommits: true })
+  })
+
+  describe('version update functionality', () => {
+    let updateVersionInFiles, updatePackageJsonVersion;
+    
+    beforeEach(async () => {
+      const versionUpdater = await import('../src/version-updater.js');
+      updateVersionInFiles = versionUpdater.updateVersionInFiles;
+      updatePackageJsonVersion = versionUpdater.updatePackageJsonVersion;
+    })
+
+    beforeEach(() => {
+      vi.clearAllMocks()
+      fs.existsSync.mockReturnValue(false)
+      fs.readFileSync.mockReturnValue(JSON.stringify(mockPackageJson))
+      fs.writeFileSync.mockImplementation(() => {})
+    })
+
+    it('should update version references when enabled', async () => {
+      const config = {
+        updateVersionReferences: true,
+        versionUpdateFiles: ['README.md']
+      }
+
+      fs.existsSync.mockReturnValue(true)
+      fs.readFileSync.mockImplementation((path) => {
+        if (path === './package.json') return JSON.stringify(mockPackageJson)
+        if (path === '.verbump-jsrc.json') return JSON.stringify(config)
+        return ''
+      })
+
+      updateVersionInFiles.mockReturnValue({
+        updated: [{ file: 'README.md', changes: 2 }],
+        totalChanges: 2,
+        errors: []
+      })
+
+      const result = await bumpVersion('patch', { updateVersionReferences: true })
+
+      expect(result).toBe('1.0.1')
+      expect(updatePackageJsonVersion).toHaveBeenCalledWith('1.0.1', './package.json')
+      expect(updateVersionInFiles).toHaveBeenCalledWith('1.0.0', '1.0.1', expect.objectContaining({
+        files: ['README.md'],
+        dryRun: false
+      }))
+    })
+
+    it('should skip version updates when disabled', async () => {
+      const config = {
+        updateVersionReferences: false
+      }
+
+      fs.existsSync.mockReturnValue(true)
+      fs.readFileSync.mockImplementation((path) => {
+        if (path === './package.json') return JSON.stringify(mockPackageJson)
+        if (path === '.verbump-jsrc.json') return JSON.stringify(config)
+        return ''
+      })
+
+      const result = await bumpVersion('patch')
+
+      expect(result).toBe('1.0.1')
+      expect(updatePackageJsonVersion).toHaveBeenCalledWith('1.0.1', './package.json')
+      expect(updateVersionInFiles).not.toHaveBeenCalled()
+    })
+
+    it('should skip version updates when disabled via options', async () => {
+      fs.existsSync.mockReturnValue(false)
+      fs.readFileSync.mockReturnValue(JSON.stringify(mockPackageJson))
+
+      const result = await bumpVersion('patch', { updateVersionReferences: false })
+
+      expect(result).toBe('1.0.1')
+      expect(updatePackageJsonVersion).toHaveBeenCalledWith('1.0.1', './package.json')
+      expect(updateVersionInFiles).not.toHaveBeenCalled()
+    })
+
+    it('should handle dry run mode', async () => {
+      const config = {
+        updateVersionReferences: true,
+        versionUpdateFiles: ['README.md']
+      }
+
+      fs.existsSync.mockReturnValue(true)
+      fs.readFileSync.mockImplementation((path) => {
+        if (path === './package.json') return JSON.stringify(mockPackageJson)
+        if (path === '.verbump-jsrc.json') return JSON.stringify(config)
+        return ''
+      })
+
+      updateVersionInFiles.mockReturnValue({
+        updated: [{ file: 'README.md', changes: 2 }],
+        totalChanges: 2,
+        errors: []
+      })
+
+      const result = await bumpVersion('patch', { dryRun: true })
+
+      expect(result).toBe('1.0.1')
+      expect(updateVersionInFiles).toHaveBeenCalledWith('1.0.0', '1.0.1', expect.objectContaining({
+        dryRun: true
+      }))
+    })
+
+    it('should use custom version update files from config', async () => {
+      const config = {
+        updateVersionReferences: true,
+        versionUpdateFiles: ['docs/**/*.md', 'src/**/*.js']
+      }
+
+      fs.existsSync.mockReturnValue(true)
+      fs.readFileSync.mockImplementation((path) => {
+        if (path === './package.json') return JSON.stringify(mockPackageJson)
+        if (path === '.verbump-jsrc.json') return JSON.stringify(config)
+        return ''
+      })
+
+      updateVersionInFiles.mockReturnValue({
+        updated: [],
+        totalChanges: 0,
+        errors: []
+      })
+
+      const result = await bumpVersion('patch')
+
+      expect(result).toBe('1.0.1')
+      expect(updateVersionInFiles).toHaveBeenCalledWith('1.0.0', '1.0.1', expect.objectContaining({
+        files: ['docs/**/*.md', 'src/**/*.js']
+      }))
+    })
   })
 })

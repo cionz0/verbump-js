@@ -103,6 +103,22 @@ describe('CLI Integration', () => {
     expect(result).toBe('1.0.0')
   })
 
+  it('should handle --no-version-update option', async () => {
+    const { bumpVersion } = await import('../src/bump.js')
+    
+    const result = await bumpVersion('patch', { updateVersionReferences: false })
+    
+    expect(result).toBe('1.0.1')
+  })
+
+  it('should handle --dry-run option', async () => {
+    const { bumpVersion } = await import('../src/bump.js')
+    
+    const result = await bumpVersion('patch', { dryRun: true })
+    
+    expect(result).toBe('1.0.1')
+  })
+
   it('should work with configuration file', async () => {
     const config = {
       tagPrefix: 'v',

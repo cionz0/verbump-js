@@ -1,6 +1,6 @@
 {
   "name": "@cionz0/verbump-js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lightweight version bump CLI for Node.js projects",
   "bin": {
     "verbump-js": "./bin/cli.js"
@@ -21,6 +21,15 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "postinstall": "node scripts/setup.js",
+    "setup": "node scripts/setup.js",
+    "bump:patch": "verbump-js patch --generate-changelog",
+    "bump:minor": "verbump-js minor --generate-changelog",
+    "bump:major": "verbump-js major --generate-changelog",
+    "bump:patch:push": "verbump-js patch --generate-changelog --push",
+    "bump:minor:push": "verbump-js minor --generate-changelog --push",
+    "bump:major:push": "verbump-js major --generate-changelog --push",
+    "changelog": "verbump-js changelog --generate-changelog"
   }
 }

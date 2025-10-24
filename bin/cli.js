@@ -2,11 +2,12 @@
 import { program } from "commander";
 import chalk from "chalk";
 import { bumpVersion, updateChangelogOnly } from "../src/bump.js";
+import { setupScripts } from "../scripts/setup.js";
 
 program
   .name("verbump-js")
   .description("Lightweight version bump CLI for Node.js projects")
-  .argument("[type]", "Type of bump (patch, minor, major) or 'changelog' to update only changelog")
+  .argument("[type]", "Type of bump (patch, minor, major), 'changelog' to update only changelog, or 'setup' to add scripts")
   .option("--no-git", "Update version only, without commit or tag")
   .option("--push", "Also execute git push origin main --tags")
   .option("--no-changelog", "Don't update the changelog")
@@ -16,11 +17,13 @@ program
       if (type === 'changelog') {
         await updateChangelogOnly(options);
         console.log(chalk.green(`✅ Changelog updated`));
+      } else if (type === 'setup') {
+        setupScripts();
       } else if (type && ['patch', 'minor', 'major'].includes(type)) {
         const newVersion = await bumpVersion(type, options);
         console.log(chalk.green(`✅ Version updated to ${newVersion}`));
       } else {
-        console.error(chalk.red("❌ Error: Invalid type. Use 'patch', 'minor', 'major', or 'changelog'"));
+        console.error(chalk.red("❌ Error: Invalid type. Use 'patch', 'minor', 'major', 'changelog', or 'setup'"));
         process.exit(1);
       }
     } catch (err) {

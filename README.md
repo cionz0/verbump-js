@@ -65,6 +65,7 @@ npx verbump-js <type> [options]
 - `minor` - New features (1.0.0 → 1.1.0)  
 - `major` - Breaking changes (1.0.0 → 2.0.0)
 - `changelog` - Update changelog only
+- `setup` - Add suggested scripts to package.json
 
 ### Examples
 
@@ -80,6 +81,9 @@ npx verbump-js major --generate-changelog --push
 
 # Update changelog for current version
 npx verbump-js changelog --generate-changelog
+
+# Add suggested scripts to package.json
+npx verbump-js setup
 ```
 
 ## ⚙️ Configuration

@@ -26,13 +26,13 @@ A modern, fast, and feature-rich CLI tool for managing semantic versioning in No
 ### NPM
 ```bash
 npm install -D @cionz0/verbump-js
-npx verbump-js setup  # Add helpful scripts to package.json
+npx verbump-js setup  # Interactive setup with changelog configuration
 ```
 
 ### GitHub
 ```bash
 npm install -D git+https://github.com/cionz0/verbump-js.git
-npx verbump-js setup  # Add helpful scripts to package.json
+npx verbump-js setup  # Interactive setup with changelog configuration
 ```
 
 ### Global Installation
@@ -42,6 +42,18 @@ npm install -g @cionz0/verbump-js
 
 ## 🚀 Quick Start
 
+### 1. Setup (First Time)
+```bash
+# Run interactive setup to configure changelog preferences
+npx verbump-js setup
+```
+
+The setup will ask you:
+- ✅ **Add helpful scripts** to your `package.json`
+- 📝 **Changelog file location** (CHANGELOG.md, CHANGES.md, HISTORY.md, or custom)
+- 🔄 **Generate from commits** (automatic changelog generation from git commits)
+
+### 2. Usage
 ```bash
 # Basic version bump
 npx verbump-js patch
@@ -104,15 +116,12 @@ npx verbump-js setup
 
 ## ⚙️ Configuration
 
-Create a `.verbump-jsrc.json` file in your project root:
+The setup process automatically creates a `.verbump-jsrc.json` file with your preferences:
 
 ```json
 {
-  "tagPrefix": "v",
-  "push": false,
-  "updateChangelog": true,
-  "generateChangelogFromCommits": false,
-  "changelogFile": "CHANGELOG.md",
+  "changelogFile": "HISTORY.md",
+  "generateChangelogFromCommits": true,
   "updateVersionReferences": true,
   "versionUpdateFiles": [
     "README.md",
@@ -120,22 +129,29 @@ Create a `.verbump-jsrc.json` file in your project root:
     "*.md",
     "src/**/*.js",
     "bin/**/*.js"
-  ]
+  ],
+  "tagPrefix": "v",
+  "push": false,
+  "updateChangelog": true
 }
 ```
+
+### Manual Configuration
+
+You can also create or modify `.verbump-jsrc.json` manually:
 
 ### Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `tagPrefix` | string | `"v"` | Prefix for git tags (e.g., "v1.0.0") |
-| `push` | boolean | `false` | Automatically push to remote |
-| `updateChangelog` | boolean | `true` | Update changelog file |
-| `generateChangelogFromCommits` | boolean | `false` | Generate changelog from git commits |
-| `changelogFile` | string | `"CHANGELOG.md"` | Changelog file path |
+| `changelogFile` | string | `"CHANGELOG.md"` | Changelog file path (set during setup) |
+| `generateChangelogFromCommits` | boolean | `false` | Generate changelog from git commits (set during setup) |
 | `updateVersionReferences` | boolean | `true` | Update version references in other files |
 | `versionUpdateFiles` | array | `["README.md", "CHANGELOG.md", "*.md", "src/**/*.js", "bin/**/*.js"]` | Files to scan for version updates |
 | `versionUpdatePatterns` | array | `[see example]` | Custom regex patterns for version matching |
+| `tagPrefix` | string | `"v"` | Prefix for git tags (e.g., "v1.0.0") |
+| `push` | boolean | `false` | Automatically push to remote |
+| `updateChangelog` | boolean | `true` | Update changelog file |
 
 ## 🛠️ CLI Options
 

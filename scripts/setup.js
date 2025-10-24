@@ -85,24 +85,43 @@ async function setupScripts() {
       console.log('  📄 CHANGELOG.md (default)');
       console.log('  📄 CHANGES.md');
       console.log('  📄 HISTORY.md');
+      console.log('  📄 docs/CHANGELOG.md');
+      console.log('  📄 docs/HISTORY.md');
       console.log('  📄 Custom path');
       
       const changelogChoice = await askQuestion('\n❓ Changelog file location (CHANGELOG.md): ');
       
       let changelogFile = 'CHANGELOG.md';
       if (changelogChoice.trim()) {
-        if (changelogChoice.toLowerCase() === 'changes.md') {
+        const choice = changelogChoice.trim();
+        if (choice.toLowerCase() === 'changes.md') {
           changelogFile = 'CHANGES.md';
-        } else if (changelogChoice.toLowerCase() === 'history.md') {
+        } else if (choice.toLowerCase() === 'history.md') {
           changelogFile = 'HISTORY.md';
-        } else if (changelogChoice.toLowerCase() !== 'changelog.md') {
-          changelogFile = changelogChoice.trim();
+        } else if (choice.toLowerCase() === 'docs/changelog.md') {
+          changelogFile = 'docs/CHANGELOG.md';
+        } else if (choice.toLowerCase() === 'docs/history.md') {
+          changelogFile = 'docs/HISTORY.md';
+        } else if (choice.toLowerCase() !== 'changelog.md') {
+          // Use the exact path provided by the user
+          changelogFile = choice;
         }
       }
       
       // Ask about changelog generation from commits
       const generateFromCommits = await askQuestion('\n❓ Generate changelog from git commits automatically? (Y/n): ');
       const generateCommits = generateFromCommits !== 'n' && generateFromCommits !== 'no';
+      
+      // Create directory if changelog file is in a subdirectory
+      const changelogDir = path.dirname(changelogFile);
+      if (changelogDir !== '.' && !fs.existsSync(changelogDir)) {
+        try {
+          fs.mkdirSync(changelogDir, { recursive: true });
+          console.log(`📁 Created directory: ${changelogDir}`);
+        } catch (error) {
+          console.log(`⚠️  Warning: Could not create directory ${changelogDir}: ${error.message}`);
+        }
+      }
       
       // Create configuration file
       const config = {
@@ -132,6 +151,9 @@ async function setupScripts() {
       console.log(`✅ Created configuration file: .verbump-jsrc.json`);
       console.log(`✅ Changelog will be created at: ${changelogFile}`);
       console.log(`✅ Generate from commits: ${generateCommits ? 'Yes' : 'No'}`);
+      if (changelogDir !== '.') {
+        console.log(`✅ Directory structure: ${changelogDir}/`);
+      }
       console.log('\n🚀 You can now use:');
       console.log('   npm run bump:patch');
       console.log('   npm run bump:minor');

@@ -16,6 +16,7 @@ A modern, fast, and feature-rich CLI tool for managing semantic versioning in No
 - 📝 **Smart Changelog Generation**: Auto-generate changelogs from git commits
 - 🔄 **Commit-Amend Workflow**: Clean git history without extra commits
 - 🏷️ **Conventional Commits**: Categorize changes automatically
+- 🔧 **Automatic Version Updates**: Update version references across all files
 - ⚙️ **Flexible Configuration**: Customize behavior via config file
 - 🚀 **Zero Dependencies**: Lightweight and fast
 - 🧪 **Fully Tested**: Comprehensive test suite with 100% coverage
@@ -48,6 +49,12 @@ npx verbump-js minor --generate-changelog
 
 # Bump and push to remote
 npx verbump-js major --push
+
+# Bump with automatic version updates across all files
+npx verbump-js patch
+
+# Dry run to see what would be updated
+npx verbump-js minor --dry-run
 
 # Update changelog only (no version bump)
 npx verbump-js changelog --generate-changelog
@@ -83,6 +90,12 @@ npx verbump-js major --generate-changelog --push
 # Update changelog for current version
 npx verbump-js changelog --generate-changelog
 
+# Skip version updates in other files
+npx verbump-js patch --no-version-update
+
+# Dry run to preview changes
+npx verbump-js minor --dry-run
+
 # Add suggested scripts to package.json
 npx verbump-js setup
 ```
@@ -97,7 +110,15 @@ Create a `.verbump-jsrc.json` file in your project root:
   "push": false,
   "updateChangelog": true,
   "generateChangelogFromCommits": false,
-  "changelogFile": "CHANGELOG.md"
+  "changelogFile": "CHANGELOG.md",
+  "updateVersionReferences": true,
+  "versionUpdateFiles": [
+    "README.md",
+    "CHANGELOG.md",
+    "*.md",
+    "src/**/*.js",
+    "bin/**/*.js"
+  ]
 }
 ```
 
@@ -110,6 +131,9 @@ Create a `.verbump-jsrc.json` file in your project root:
 | `updateChangelog` | boolean | `true` | Update changelog file |
 | `generateChangelogFromCommits` | boolean | `false` | Generate changelog from git commits |
 | `changelogFile` | string | `"CHANGELOG.md"` | Changelog file path |
+| `updateVersionReferences` | boolean | `true` | Update version references in other files |
+| `versionUpdateFiles` | array | `["README.md", "CHANGELOG.md", "*.md", "src/**/*.js", "bin/**/*.js"]` | Files to scan for version updates |
+| `versionUpdatePatterns` | array | `[see example]` | Custom regex patterns for version matching |
 
 ## 🛠️ CLI Options
 
@@ -119,6 +143,8 @@ Create a `.verbump-jsrc.json` file in your project root:
 | `--push` | Also execute `git push origin main --tags` |
 | `--no-changelog` | Don't update the changelog |
 | `--generate-changelog` | Generate changelog from git commits |
+| `--no-version-update` | Don't update version references in other files |
+| `--dry-run` | Show what would be updated without making changes |
 
 ## 📝 Changelog Generation
 
@@ -185,6 +211,63 @@ npx verbump-js changelog --generate-changelog
 - 📝 Update changelog for the current version
 - 🚧 Document changes before a new release
 - 🔄 Regenerate changelog with better formatting
+
+## 🔧 Automatic Version Updates
+
+The tool automatically updates version references across your project files:
+
+### 🎯 What Gets Updated
+- **README.md**: Version badges and references
+- **CHANGELOG.md**: Version headers
+- **package.json**: Version field (always updated)
+- **Source files**: Version strings in comments and code
+- **Documentation**: Version references in markdown files
+
+### 📝 Supported Patterns
+```javascript
+// Badge patterns
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]
+
+// JSON patterns
+"version": "1.0.0"
+'version': '1.0.0'
+
+// Header patterns
+## 1.0.0 - 2024-01-01
+
+// Comment patterns
+version: 1.0.0
+```
+
+### ⚙️ Custom Patterns
+Configure custom patterns in `.verbump-jsrc.json`:
+
+```json
+{
+  "versionUpdatePatterns": [
+    {
+      "pattern": "(version-)([0-9]+\\.[0-9]+\\.[0-9]+)",
+      "replacement": "$1${newVersion}"
+    },
+    {
+      "pattern": "(VERSION\\s*=\\s*['\"])([0-9]+\\.[0-9]+\\.[0-9]+)(['\"])",
+      "replacement": "$1${newVersion}$3"
+    }
+  ]
+}
+```
+
+### 🚀 Usage Examples
+```bash
+# Update version and all references
+npx verbump-js patch
+
+# Preview what would be updated
+npx verbump-js minor --dry-run
+
+# Skip version updates in other files
+npx verbump-js patch --no-version-update
+```
 
 ## 🎯 Workflow Examples
 

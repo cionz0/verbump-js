@@ -12,6 +12,8 @@ program
   .option("--push", "Also execute git push origin main --tags")
   .option("--no-changelog", "Don't update the changelog")
   .option("--generate-changelog", "Generate changelog from git commits")
+  .option("--no-version-update", "Don't update version references in other files")
+  .option("--dry-run", "Show what would be updated without making changes")
   .action(async (type, options) => {
     try {
       if (type === 'changelog') {
@@ -20,7 +22,12 @@ program
       } else if (type === 'setup') {
         setupScripts();
       } else if (type && ['patch', 'minor', 'major'].includes(type)) {
-        const newVersion = await bumpVersion(type, options);
+        const bumpOptions = {
+          ...options,
+          updateVersionReferences: !options.noVersionUpdate,
+          dryRun: options.dryRun
+        };
+        const newVersion = await bumpVersion(type, bumpOptions);
         console.log(chalk.green(`✅ Version updated to ${newVersion}`));
       } else {
         console.error(chalk.red("❌ Error: Invalid type. Use 'patch', 'minor', 'major', 'changelog', or 'setup'"));

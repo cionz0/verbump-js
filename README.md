@@ -166,7 +166,7 @@ You can also create or modify `.verbump-jsrc.json` manually:
 
 ## 📝 Changelog Generation
 
-The tool can generate meaningful changelogs from your git commits:
+The tool can generate meaningful changelogs from your git commits with commit hash and author information:
 
 ### 🚀 Basic Usage
 ```bash
@@ -175,6 +175,26 @@ npx verbump-js patch --generate-changelog
 
 # Update changelog only (no version bump)
 npx verbump-js changelog --generate-changelog
+```
+
+### 📋 Changelog Format
+Each changelog entry includes:
+- **Commit hash** (first 7 characters)
+- **Author name**
+- **Clean commit message** (without conventional commit prefixes)
+
+### 📄 Example Output
+```markdown
+## 1.0.1 - 2025-10-25
+
+### ✨ Features
+- add hello world functionality (971de40 by cionzo)
+
+### 🐛 Bug Fixes
+- add error handling to prevent crashes (cd49b21 by cionzo)
+
+### 📝 Other Changes
+- update README with usage examples (3c35fbd by cionzo)
 ```
 
 ### ⚙️ Configuration

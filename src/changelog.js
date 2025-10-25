@@ -5,10 +5,18 @@ import { execSync } from "child_process";
 export function updateChangelog(version, file, options = {}) {
   const now = new Date().toISOString().split("T")[0];
   
+  if (options.generateFromCommits) {
+    const commits = getCommitsSinceLastChangelog(file);
+    if (commits.length === 0) {
+      console.log(chalk.yellow(`ℹ️  No new commits since last changelog update. Skipping changelog update.`));
+      return;
+    }
+  }
+
   let entry = `\n## ${version} - ${now}\n\n`;
   
   if (options.generateFromCommits) {
-    const commits = getCommitsSinceLastTag();
+    const commits = getCommitsSinceLastChangelog(file);
     if (commits.length > 0) {
       entry += generateChangelogFromCommits(commits);
     } else {
@@ -26,6 +34,55 @@ export function updateChangelog(version, file, options = {}) {
   const newContent = entry + content;
   fs.writeFileSync(file, newContent);
   console.log(chalk.blue(`📝 Changelog updated: ${file}`));
+}
+
+function getCommitsSinceLastChangelog(file) {
+  try {
+    // Get the last changelog entry date
+    const lastChangelogDate = getLastChangelogDate(file);
+    if (!lastChangelogDate) {
+      // If no changelog exists, get commits since last tag or last 10 commits
+      return getCommitsSinceLastTag();
+    }
+
+    // Get commits since the last changelog date
+    const commits = execSync(`git log --since="${lastChangelogDate}" --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
+      .trim()
+      .split('\n')
+      .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
+      .map(commit => {
+        const [hash, author, message] = commit.split('|');
+        return { hash: hash.substring(0, 7), author, message };
+      });
+    
+    return commits;
+  } catch (error) {
+    // Fallback to getting commits since last tag
+    return getCommitsSinceLastTag();
+  }
+}
+
+function getLastChangelogDate(file) {
+  try {
+    if (!fs.existsSync(file)) {
+      return null;
+    }
+
+    const content = fs.readFileSync(file, "utf8");
+    const lines = content.split('\n');
+    
+    // Find the first date in the changelog (most recent entry)
+    for (const line of lines) {
+      const dateMatch = line.match(/## \d+\.\d+\.\d+ - (\d{4}-\d{2}-\d{2})/);
+      if (dateMatch) {
+        return dateMatch[1];
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    return null;
+  }
 }
 
 function getCommitsSinceLastTag() {

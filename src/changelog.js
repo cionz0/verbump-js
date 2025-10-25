@@ -33,20 +33,28 @@ function getCommitsSinceLastTag() {
     // Get the last tag
     const lastTag = execSync("git describe --tags --abbrev=0", { encoding: "utf8" }).trim();
     
-    // Get commits since last tag
-    const commits = execSync(`git log ${lastTag}..HEAD --pretty=format:"%s"`, { encoding: "utf8" })
+    // Get commits since last tag with hash and author
+    const commits = execSync(`git log ${lastTag}..HEAD --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
       .trim()
       .split('\n')
-      .filter(commit => commit.trim() && !commit.includes('bump version'));
+      .filter(commit => commit.trim() && !commit.includes('bump version'))
+      .map(commit => {
+        const [hash, author, message] = commit.split('|');
+        return { hash: hash.substring(0, 7), author, message };
+      });
     
     return commits;
   } catch (error) {
     // If no tags exist, get last 10 commits
     try {
-      const commits = execSync("git log -10 --pretty=format:\"%s\"", { encoding: "utf8" })
+      const commits = execSync("git log -10 --pretty=format:\"%H|%an|%s\"", { encoding: "utf8" })
         .trim()
         .split('\n')
-        .filter(commit => commit.trim() && !commit.includes('bump version'));
+        .filter(commit => commit.trim() && !commit.includes('bump version'))
+        .map(commit => {
+          const [hash, author, message] = commit.split('|');
+          return { hash: hash.substring(0, 7), author, message };
+        });
       
       return commits;
     } catch (fallbackError) {
@@ -64,7 +72,7 @@ function generateChangelogFromCommits(commits) {
   };
 
   commits.forEach(commit => {
-    const lowerCommit = commit.toLowerCase();
+    const lowerCommit = commit.message.toLowerCase();
     
     if (lowerCommit.includes('feat') || lowerCommit.includes('feature')) {
       categorized.features.push(formatCommit(commit));
@@ -116,7 +124,10 @@ function generateChangelogFromCommits(commits) {
 
 function formatCommit(commit) {
   // Remove conventional commit prefixes
-  return commit
+  const cleanMessage = commit.message
     .replace(/^(feat|feature|fix|bug|chore|docs|style|refactor|perf|test|ci|build|revert)(\(.+\))?:?\s*/i, '')
     .trim();
+  
+  // Format: message (hash by author)
+  return `${cleanMessage} (${commit.hash} by ${commit.author})`;
 }

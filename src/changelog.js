@@ -28,6 +28,106 @@ export function updateChangelog(version, file, options = {}) {
   console.log(chalk.blue(`📝 Changelog updated: ${file}`));
 }
 
+export function regenerateChangelog(file, options = {}) {
+  if (!options.generateFromCommits) {
+    console.log(chalk.yellow(`ℹ️  No commits to process. Use --generate-changelog to generate from git commits.`));
+    return;
+  }
+
+  // Generate complete changelog from git history
+  const completeChangelog = generateCompleteChangelog();
+  fs.writeFileSync(file, completeChangelog);
+  console.log(chalk.blue(`📝 Changelog regenerated from git history: ${file}`));
+}
+
+function generateCompleteChangelog() {
+  try {
+    // Get all tags sorted by version
+    const tags = execSync("git tag --sort=-version:refname", { encoding: "utf8" })
+      .trim()
+      .split('\n')
+      .filter(tag => tag.trim());
+
+    let changelog = "# Changelog\n\n";
+    changelog += "All notable changes to this project will be documented in this file.\n\n";
+
+    // Process each tag
+    for (let i = 0; i < tags.length; i++) {
+      const currentTag = tags[i];
+      const nextTag = tags[i + 1];
+      
+      // Get version from tag (remove 'v' prefix if present)
+      const version = currentTag.replace(/^v/, '');
+      
+      // Get commits between this tag and the next one
+      const commits = getCommitsBetweenTags(nextTag, currentTag);
+      
+      if (commits.length > 0) {
+        // Get tag date
+        const tagDate = execSync(`git log -1 --format=%ai ${currentTag}`, { encoding: "utf8" })
+          .trim()
+          .split(' ')[0];
+        
+        changelog += `## ${version} - ${tagDate}\n\n`;
+        changelog += generateChangelogFromCommits(commits);
+        changelog += '\n';
+      }
+    }
+
+    // Add commits before any tags (if any)
+    const commitsBeforeTags = getCommitsBeforeFirstTag();
+    if (commitsBeforeTags.length > 0) {
+      const firstCommitDate = execSync("git log --reverse --format=%ai | head -1", { encoding: "utf8" })
+        .trim()
+        .split(' ')[0];
+      
+      changelog += `## Unreleased - ${firstCommitDate}\n\n`;
+      changelog += generateChangelogFromCommits(commitsBeforeTags);
+      changelog += '\n';
+    }
+
+    return changelog;
+  } catch (error) {
+    console.error("Error generating changelog:", error.message);
+    return "# Changelog\n\nError generating changelog from git history.\n";
+  }
+}
+
+function getCommitsBetweenTags(fromTag, toTag) {
+  try {
+    const range = fromTag ? `${fromTag}..${toTag}` : toTag;
+    const commits = execSync(`git log ${range} --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
+      .trim()
+      .split('\n')
+      .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
+      .map(commit => {
+        const [hash, author, message] = commit.split('|');
+        return { hash: hash.substring(0, 7), author, message };
+      });
+    
+    return commits;
+  } catch (error) {
+    return [];
+  }
+}
+
+function getCommitsBeforeFirstTag() {
+  try {
+    const commits = execSync("git log --pretty=format:\"%H|%an|%s\"", { encoding: "utf8" })
+      .trim()
+      .split('\n')
+      .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
+      .map(commit => {
+        const [hash, author, message] = commit.split('|');
+        return { hash: hash.substring(0, 7), author, message };
+      });
+    
+    return commits;
+  } catch (error) {
+    return [];
+  }
+}
+
 
 function getCommitsSinceLastTag() {
   try {

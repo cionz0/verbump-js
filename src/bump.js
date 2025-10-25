@@ -1,7 +1,7 @@
 import fs from "fs";
 import semver from "semver";
 import chalk from "chalk";
-import { updateChangelog } from "./changelog.js";
+import { updateChangelog, regenerateChangelog } from "./changelog.js";
 import { gitCommitAndTag, gitPush } from "./git.js";
 import { updateVersionInFiles, updatePackageJsonVersion } from "./version-updater.js";
 
@@ -86,7 +86,7 @@ export async function updateChangelogOnly(options = {}) {
     generateFromCommits: config.generateChangelogFromCommits || options.generateChangelog || false
   };
   
-  updateChangelog(currentVersion, config.changelogFile || "CHANGELOG.md", changelogOptions);
+  regenerateChangelog(config.changelogFile || "CHANGELOG.md", changelogOptions);
   
   return currentVersion;
 }

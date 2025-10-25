@@ -1,6 +1,13 @@
 
 ## 1.2.4 - 2025-10-25
 
+### 📝 Other Changes
+- add test comment to verify changelog generation (aaa9e9b by cionzo)
+- update README with enhanced changelog format showing commit hash and author (a4aad68 by cionzo)
+
+
+## 1.2.4 - 2025-10-25
+
 - Automatic version update.
 
 ## 1.2.4 - 2025-10-25

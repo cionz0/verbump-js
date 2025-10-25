@@ -38,15 +38,15 @@ export function updateChangelog(version, file, options = {}) {
 
 function getCommitsSinceLastChangelog(file) {
   try {
-    // Get the last changelog entry date
-    const lastChangelogDate = getLastChangelogDate(file);
-    if (!lastChangelogDate) {
+    // Get the last commit hash from changelog
+    const lastChangelogCommit = getLastChangelogCommit(file);
+    if (!lastChangelogCommit) {
       // If no changelog exists, get commits since last tag or last 10 commits
       return getCommitsSinceLastTag();
     }
 
-    // Get commits since the last changelog date
-    const commits = execSync(`git log --since="${lastChangelogDate}" --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
+    // Get commits since the last changelog commit
+    const commits = execSync(`git log ${lastChangelogCommit}..HEAD --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
       .trim()
       .split('\n')
       .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
@@ -62,7 +62,7 @@ function getCommitsSinceLastChangelog(file) {
   }
 }
 
-function getLastChangelogDate(file) {
+function getLastChangelogCommit(file) {
   try {
     if (!fs.existsSync(file)) {
       return null;
@@ -71,11 +71,11 @@ function getLastChangelogDate(file) {
     const content = fs.readFileSync(file, "utf8");
     const lines = content.split('\n');
     
-    // Find the first date in the changelog (most recent entry)
+    // Find the first commit hash in the changelog (most recent entry)
     for (const line of lines) {
-      const dateMatch = line.match(/## \d+\.\d+\.\d+ - (\d{4}-\d{2}-\d{2})/);
-      if (dateMatch) {
-        return dateMatch[1];
+      const commitMatch = line.match(/\(([a-f0-9]{7}) by/);
+      if (commitMatch) {
+        return commitMatch[1];
       }
     }
     

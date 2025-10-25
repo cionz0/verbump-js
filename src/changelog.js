@@ -5,18 +5,10 @@ import { execSync } from "child_process";
 export function updateChangelog(version, file, options = {}) {
   const now = new Date().toISOString().split("T")[0];
   
-  if (options.generateFromCommits) {
-    const commits = getCommitsSinceLastChangelog(file);
-    if (commits.length === 0) {
-      console.log(chalk.yellow(`ℹ️  No new commits since last changelog update. Skipping changelog update.`));
-      return;
-    }
-  }
-
   let entry = `\n## ${version} - ${now}\n\n`;
   
   if (options.generateFromCommits) {
-    const commits = getCommitsSinceLastChangelog(file);
+    const commits = getCommitsSinceLastTag();
     if (commits.length > 0) {
       entry += generateChangelogFromCommits(commits);
     } else {
@@ -36,54 +28,6 @@ export function updateChangelog(version, file, options = {}) {
   console.log(chalk.blue(`📝 Changelog updated: ${file}`));
 }
 
-function getCommitsSinceLastChangelog(file) {
-  try {
-    // Get the last commit hash from changelog
-    const lastChangelogCommit = getLastChangelogCommit(file);
-    if (!lastChangelogCommit) {
-      // If no changelog exists, get commits since last tag or last 10 commits
-      return getCommitsSinceLastTag();
-    }
-
-    // Get commits since the last changelog commit
-    const commits = execSync(`git log ${lastChangelogCommit}..HEAD --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
-      .trim()
-      .split('\n')
-      .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
-      .map(commit => {
-        const [hash, author, message] = commit.split('|');
-        return { hash: hash.substring(0, 7), author, message };
-      });
-    
-    return commits;
-  } catch (error) {
-    // Fallback to getting commits since last tag
-    return getCommitsSinceLastTag();
-  }
-}
-
-function getLastChangelogCommit(file) {
-  try {
-    if (!fs.existsSync(file)) {
-      return null;
-    }
-
-    const content = fs.readFileSync(file, "utf8");
-    const lines = content.split('\n');
-    
-    // Find the first commit hash in the changelog (most recent entry)
-    for (const line of lines) {
-      const commitMatch = line.match(/\(([a-f0-9]{7}) by/);
-      if (commitMatch) {
-        return commitMatch[1];
-      }
-    }
-    
-    return null;
-  } catch (error) {
-    return null;
-  }
-}
 
 function getCommitsSinceLastTag() {
   try {

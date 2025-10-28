@@ -32,7 +32,7 @@ describe('updateChangelog', () => {
     expect(fs.existsSync).toHaveBeenCalledWith(file)
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       file,
-      expect.stringContaining(`## ${version} -`)
+      expect.stringContaining(`# ${version}`)
     )
   })
 
@@ -50,7 +50,7 @@ describe('updateChangelog', () => {
     expect(fs.readFileSync).toHaveBeenCalledWith(file, 'utf8')
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       file,
-      expect.stringContaining(`## ${version} -`)
+      expect.stringContaining(`# ${version}`)
     )
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       file,
@@ -67,11 +67,12 @@ describe('updateChangelog', () => {
     
     updateChangelog(version, file)
     
-    // Check that the date format is YYYY-MM-DD
+    // Check that the date is on next line in human format within brackets
     const writtenContent = fs.writeFileSync.mock.calls[0][1]
-    const dateMatch = writtenContent.match(/## 1\.0\.1 - (\d{4}-\d{2}-\d{2})/)
-    expect(dateMatch).toBeTruthy()
-    expect(dateMatch[1]).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    const headerMatch = writtenContent.match(/# 1\.0\.1\n\[(.+?)\]/)
+    expect(headerMatch).toBeTruthy()
+    // e.g. 16 October 2025
+    expect(headerMatch[1]).toMatch(/^\d{1,2} [A-Za-z]+ \d{4}$/)
   })
 
   it('should include default changelog entry', () => {
@@ -167,7 +168,12 @@ describe('updateChangelog', () => {
         return 'v1.0.0'
       }
       if (command.includes('git log')) {
-        return 'feat: add new feature\nfix: resolve bug\nchore: update dependencies'
+        // Simulate: %H|%h|%an|%cI|%s
+        return [
+          '0123456789abcdef|0123456|alice|2025-10-16T06:33:58.000Z|feat: add new feature',
+          '89abcdef01234567|89abcde|bob|2025-10-15T10:20:30.000Z|fix: resolve bug',
+          'fedcba9876543210|fedcba9|carol|2025-10-14T12:00:00.000Z|chore: update dependencies'
+        ].join('\n')
       }
       return ''
     })
@@ -218,7 +224,12 @@ describe('updateChangelog', () => {
         return 'v1.0.0'
       }
       if (command.includes('git log')) {
-        return 'feat: new feature\nfix: bug fix\nBREAKING CHANGE: major change\nchore: maintenance'
+        return [
+          'aaaaaaaaaaaaaaaa|aaaaaaa|dev|2025-10-12T00:00:00.000Z|feat: new feature',
+          'bbbbbbbbbbbbbbbb|bbbbbbb|dev|2025-10-11T00:00:00.000Z|fix: bug fix',
+          'cccccccccccccccc|ccccccc|dev|2025-10-10T00:00:00.000Z|BREAKING CHANGE: major change',
+          'dddddddddddddddd|ddddddd|dev|2025-10-09T00:00:00.000Z|chore: maintenance'
+        ].join('\n')
       }
       return ''
     })
@@ -245,7 +256,10 @@ describe('updateChangelog', () => {
         throw new Error('No tags found')
       }
       if (command.includes('git log -10')) {
-        return 'feat: initial feature\nfix: initial bug'
+        return [
+          'eeeeeeeeeeeeeeee|eeeeeee|dev|2025-09-01T00:00:00.000Z|feat: initial feature',
+          'ffffffffffffffff|fffffff|dev|2025-09-02T00:00:00.000Z|fix: initial bug'
+        ].join('\n')
       }
       return ''
     })

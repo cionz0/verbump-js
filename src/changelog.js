@@ -3,9 +3,10 @@ import chalk from "chalk";
 import { execSync } from "child_process";
 
 export function updateChangelog(version, file, options = {}) {
-  const now = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const humanDate = formatHumanDate(now);
   
-  let entry = `\n## ${version} - ${now}\n\n`;
+  let entry = `\n# ${version}\n[${humanDate}]\n\n`;
   
   if (options.generateFromCommits) {
     const commits = getCommitsSinceLastTag();
@@ -63,12 +64,12 @@ function generateCompleteChangelog() {
       const commits = getCommitsBetweenTags(nextTag, currentTag);
       
       if (commits.length > 0) {
-        // Get tag date
-        const tagDate = execSync(`git log -1 --format=%ai ${currentTag}`, { encoding: "utf8" })
-          .trim()
-          .split(' ')[0];
+        // Get tag date in human readable form
+        const tagIso = execSync(`git log -1 --format=%cI ${currentTag}`, { encoding: "utf8" })
+          .trim();
+        const humanDate = formatHumanDate(new Date(tagIso));
         
-        changelog += `## ${version} - ${tagDate}\n\n`;
+        changelog += `# ${version}\n[${humanDate}]\n\n`;
         changelog += generateChangelogFromCommits(commits);
         changelog += '\n';
       }
@@ -77,11 +78,11 @@ function generateCompleteChangelog() {
     // Add commits before any tags (if any)
     const commitsBeforeTags = getCommitsBeforeFirstTag();
     if (commitsBeforeTags.length > 0) {
-      const firstCommitDate = execSync("git log --reverse --format=%ai | head -1", { encoding: "utf8" })
-        .trim()
-        .split(' ')[0];
+      const firstIso = execSync("git log --reverse --format=%cI | head -1", { encoding: "utf8" })
+        .trim();
+      const humanDate = formatHumanDate(new Date(firstIso));
       
-      changelog += `## Unreleased - ${firstCommitDate}\n\n`;
+      changelog += `# Unreleased\n[${humanDate}]\n\n`;
       changelog += generateChangelogFromCommits(commitsBeforeTags);
       changelog += '\n';
     }
@@ -96,13 +97,13 @@ function generateCompleteChangelog() {
 function getCommitsBetweenTags(fromTag, toTag) {
   try {
     const range = fromTag ? `${fromTag}..${toTag}` : toTag;
-    const commits = execSync(`git log ${range} --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
+    const commits = execSync(`git log ${range} --pretty=format:"%H|%h|%an|%cI|%s"`, { encoding: "utf8" })
       .trim()
       .split('\n')
       .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
       .map(commit => {
-        const [hash, author, message] = commit.split('|');
-        return { hash: hash.substring(0, 7), author, message };
+        const [fullHash, shortHash, author, dateIso, message] = commit.split('|');
+        return { hash: shortHash, fullHash, author, dateIso, message };
       });
     
     return commits;
@@ -113,13 +114,13 @@ function getCommitsBetweenTags(fromTag, toTag) {
 
 function getCommitsBeforeFirstTag() {
   try {
-    const commits = execSync("git log --pretty=format:\"%H|%an|%s\"", { encoding: "utf8" })
+    const commits = execSync("git log --pretty=format:\"%H|%h|%an|%cI|%s\"", { encoding: "utf8" })
       .trim()
       .split('\n')
       .filter(commit => commit.trim() && !commit.includes('bump version') && !commit.includes('version bump'))
       .map(commit => {
-        const [hash, author, message] = commit.split('|');
-        return { hash: hash.substring(0, 7), author, message };
+        const [fullHash, shortHash, author, dateIso, message] = commit.split('|');
+        return { hash: shortHash, fullHash, author, dateIso, message };
       });
     
     return commits;
@@ -135,26 +136,26 @@ function getCommitsSinceLastTag() {
     const lastTag = execSync("git describe --tags --abbrev=0", { encoding: "utf8" }).trim();
     
     // Get commits since last tag with hash and author
-    const commits = execSync(`git log ${lastTag}..HEAD --pretty=format:"%H|%an|%s"`, { encoding: "utf8" })
+    const commits = execSync(`git log ${lastTag}..HEAD --pretty=format:\"%H|%h|%an|%cI|%s\"`, { encoding: "utf8" })
       .trim()
       .split('\n')
       .filter(commit => commit.trim() && !commit.includes('bump version'))
       .map(commit => {
-        const [hash, author, message] = commit.split('|');
-        return { hash: hash.substring(0, 7), author, message };
+        const [fullHash, shortHash, author, dateIso, message] = commit.split('|');
+        return { hash: shortHash, fullHash, author, dateIso, message };
       });
     
     return commits;
   } catch (error) {
     // If no tags exist, get last 10 commits
     try {
-      const commits = execSync("git log -10 --pretty=format:\"%H|%an|%s\"", { encoding: "utf8" })
+      const commits = execSync("git log -10 --pretty=format:\"%H|%h|%an|%cI|%s\"", { encoding: "utf8" })
         .trim()
         .split('\n')
         .filter(commit => commit.trim() && !commit.includes('bump version'))
         .map(commit => {
-          const [hash, author, message] = commit.split('|');
-          return { hash: hash.substring(0, 7), author, message };
+          const [fullHash, shortHash, author, dateIso, message] = commit.split('|');
+          return { hash: shortHash, fullHash, author, dateIso, message };
         });
       
       return commits;
@@ -191,7 +192,7 @@ function generateChangelogFromCommits(commits) {
   if (categorized.breaking.length > 0) {
     changelog += "### ⚠️ Breaking Changes\n";
     categorized.breaking.forEach(change => {
-      changelog += `- ${change}\n`;
+      changelog += `* ${change}\n`;
     });
     changelog += "\n";
   }
@@ -199,7 +200,7 @@ function generateChangelogFromCommits(commits) {
   if (categorized.features.length > 0) {
     changelog += "### ✨ Features\n";
     categorized.features.forEach(change => {
-      changelog += `- ${change}\n`;
+      changelog += `* ${change}\n`;
     });
     changelog += "\n";
   }
@@ -207,7 +208,7 @@ function generateChangelogFromCommits(commits) {
   if (categorized.fixes.length > 0) {
     changelog += "### 🐛 Bug Fixes\n";
     categorized.fixes.forEach(change => {
-      changelog += `- ${change}\n`;
+      changelog += `* ${change}\n`;
     });
     changelog += "\n";
   }
@@ -215,7 +216,7 @@ function generateChangelogFromCommits(commits) {
   if (categorized.other.length > 0) {
     changelog += "### 📝 Other Changes\n";
     categorized.other.forEach(change => {
-      changelog += `- ${change}\n`;
+      changelog += `* ${change}\n`;
     });
     changelog += "\n";
   }
@@ -224,11 +225,64 @@ function generateChangelogFromCommits(commits) {
 }
 
 function formatCommit(commit) {
-  // Remove conventional commit prefixes
-  const cleanMessage = commit.message
-    .replace(/^(feat|feature|fix|bug|chore|docs|style|refactor|perf|test|ci|build|revert)(\(.+\))?:?\s*/i, '')
-    .trim();
-  
-  // Format: message (hash by author)
-  return `${cleanMessage} (${commit.hash} by ${commit.author})`;
+  const timestamp = commit.dateIso || '';
+  const author = commit.author || '';
+  const message = commit.message || '';
+  const link = buildCommitLink(commit);
+  return `${timestamp} [${author}] - ${message} (${link})`;
+}
+
+function buildCommitLink(commit) {
+  const short = commit.hash;
+  const full = commit.fullHash || short;
+  try {
+    const remote = execSync("git config --get remote.origin.url", { encoding: "utf8" }).trim();
+    if (!remote) return `\`${short}\``;
+    const parsed = normalizeRemoteUrl(remote);
+    if (!parsed) return `\`${short}\``;
+    const { host, owner, repo } = parsed;
+    let url;
+    if (host.includes('bitbucket')) {
+      url = `https://${host}/${owner}/${repo}/commits/${full}`;
+    } else if (host.includes('github')) {
+      url = `https://${host}/${owner}/${repo}/commit/${full}`;
+    } else if (host.includes('gitlab')) {
+      url = `https://${host}/${owner}/${repo}/-/commit/${full}`;
+    } else {
+      return `\`${short}\``;
+    }
+    return `[\`${short}\`](${url})`;
+  } catch (e) {
+    return `\`${short}\``;
+  }
+}
+
+function normalizeRemoteUrl(remote) {
+  // Handle SSH: git@host:owner/repo.git
+  const sshMatch = remote.match(/^git@([^:]+):([^/]+)\/(.+?)(\.git)?$/);
+  if (sshMatch) {
+    return { host: sshMatch[1], owner: sshMatch[2], repo: sshMatch[3].replace(/\.git$/, '') };
+  }
+  // Handle HTTPS: https://host/owner/repo.git
+  try {
+    const url = new URL(remote.replace(/\.git$/, ''));
+    const parts = url.pathname.replace(/^\//, '').split('/');
+    if (parts.length >= 2) {
+      return { host: url.host, owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
+    }
+  } catch (e) {
+    // Not a URL
+  }
+  return null;
+}
+
+function formatHumanDate(d) {
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const day = d.getUTCDate();
+  const month = months[d.getUTCMonth()];
+  const year = d.getUTCFullYear();
+  return `${day} ${month} ${year}`;
 }

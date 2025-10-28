@@ -3,7 +3,8 @@ import chalk from "chalk";
 
 export function gitCommitAndTag(version, tag) {
   try {
-    execSync("git add package.json", { stdio: "inherit" });
+    // Stage all changes from changelog and version updates
+    execSync("git add -A", { stdio: "inherit" });
     execSync("git commit --amend --no-edit", { stdio: "inherit" });
     execSync(`git tag ${tag}`, { stdio: "inherit" });
     console.log(chalk.green(`🏷️  Created tag ${tag}`));

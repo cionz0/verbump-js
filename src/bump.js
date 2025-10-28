@@ -18,10 +18,19 @@ export async function bumpVersion(type, options = {}) {
 
   if (!newVersion) throw new Error("Invalid version increment");
 
+  console.log(chalk.cyan(`📦 ${oldVersion} → ${newVersion}`));
+
+  // 1) Update changelog first
+  if (config.updateChangelog !== false && options.changelog !== false) {
+    const changelogOptions = {
+      generateFromCommits: config.generateChangelogFromCommits || options.generateChangelog || false
+    };
+    updateChangelog(newVersion, config.changelogFile || "CHANGELOG.md", changelogOptions);
+  }
+
+  // 2) Update version number in required files (including package.json)
   // Update package.json version
   updatePackageJsonVersion(newVersion, pkgPath);
-
-  console.log(chalk.cyan(`📦 ${oldVersion} → ${newVersion}`));
 
   // Update version references across all files
   if (config.updateVersionReferences !== false && options.updateVersionReferences !== false) {
@@ -52,13 +61,7 @@ export async function bumpVersion(type, options = {}) {
     }
   }
 
-  if (config.updateChangelog !== false && options.changelog !== false) {
-    const changelogOptions = {
-      generateFromCommits: config.generateChangelogFromCommits || options.generateChangelog || false
-    };
-    updateChangelog(newVersion, config.changelogFile || "CHANGELOG.md", changelogOptions);
-  }
-
+  // 3) Amend commit with all changes, 4) create tag, 5) optionally push
   if (options.git !== false) {
     const tag = `${config.tagPrefix || "v"}${newVersion}`;
 

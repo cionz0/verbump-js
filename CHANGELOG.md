@@ -1,3 +1,8 @@
+
+# 1.3.0
+[28 October 2025]
+
+- Automatic version update.
 # Changelog
 
 All notable changes to this project will be documented in this file.

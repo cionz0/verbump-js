@@ -34,7 +34,7 @@ program
   .description("Lightweight version bump CLI for Node.js projects")
   .argument("[type]", "Type of bump (patch, minor, major), 'changelog' to update only changelog, or 'setup' to add scripts")
   .option("--no-git", "Update version only, without commit or tag")
-  .option("--push", "Also execute git push origin main --tags")
+  .option("--push", "Also execute git push --follow-tags")
   .option("--no-changelog", "Don't update the changelog")
   .option("--generate-changelog", "Generate changelog from git commits")
   .option("--no-version-update", "Don't update version references in other files")

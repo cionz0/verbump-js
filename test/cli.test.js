@@ -76,7 +76,7 @@ describe('CLI Integration', () => {
     const result = await bumpVersion('patch', { push: true })
     
     expect(result).toBe('1.0.1')
-    expect(execSync).toHaveBeenCalledWith('git push origin main --tags', { stdio: 'inherit' })
+    expect(execSync).toHaveBeenCalledWith('git push --follow-tags', { stdio: 'inherit' })
   })
 
   it('should handle --no-changelog option', async () => {

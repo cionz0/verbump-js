@@ -15,7 +15,7 @@ export function gitCommitAndTag(version, tag) {
 
 export function gitPush() {
   try {
-    execSync("git push origin main --tags", { stdio: "inherit" });
+    execSync("git push --follow-tags", { stdio: "inherit" });
     console.log(chalk.green("🚀 Push completed"));
   } catch (e) {
     console.error(chalk.red("⚠️ Push Error:"), e.message);

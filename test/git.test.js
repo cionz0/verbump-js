@@ -104,7 +104,7 @@ describe('gitPush', () => {
     gitPush()
     
     expect(execSync).toHaveBeenCalledWith(
-      'git push origin main --tags',
+      'git push --follow-tags',
       { stdio: 'inherit' }
     )
   })

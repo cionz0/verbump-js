@@ -158,7 +158,7 @@ You can also create or modify `.verbump-jsrc.json` manually:
 | Option | Description |
 |--------|-------------|
 | `--no-git` | Update version only, without commit or tag |
-| `--push` | Also execute `git push origin main --tags` |
+| `--push` | Also execute `git push --follow-tags` |
 | `--no-changelog` | Don't update the changelog |
 | `--generate-changelog` | Generate changelog from git commits |
 | `--no-version-update` | Don't update version references in other files |
